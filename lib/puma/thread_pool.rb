@@ -30,13 +30,23 @@ module Puma
     # thread.
     #
     def initialize(min, max, *extra, &block)
+      # This is signaled when a task is added, at that stage the thread pool
+      # should be able to consume one or more tasks.
+      # When this is signaled, a thread will try to pull & consume a task.
       @not_empty = ConditionVariable.new
+
+      # This is signaled after a task is completed, at that stage we expect
+      # the thread pool not to be full.
       @not_full = ConditionVariable.new
+
       @mutex = Mutex.new
 
       @todo = []
 
+      # Amount of threads currently running
       @spawned = 0
+
+      # Amount of threads waiting for tasks to arrive
       @waiting = 0
 
       @min = Integer(min)
